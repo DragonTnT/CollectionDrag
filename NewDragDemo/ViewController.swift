@@ -14,7 +14,7 @@ class ViewController: UIViewController {
             scrollView.contentSize = CGSize(width: kScreenW * CGFloat(subScrollVC.count), height: kScreenH)
         }
     }
-    var bottomSubVC = BottomVC()
+    lazy var bottomSubVC = BottomVC(items: DataSourceManager.main.bottomDataSource)
     
     lazy var scrollView: UIScrollView = {
         let it = UIScrollView(frame: self.view.bounds)
