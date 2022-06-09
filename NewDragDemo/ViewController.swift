@@ -29,6 +29,7 @@ class ViewController: UIViewController {
         let it = DragSortCollectionCell.loadViewFromNib()
         it.isHidden = true
         it.frame = CGRect(origin: .zero, size: ConstHelper.itemSize)
+        it.closeBtn.isHidden = true
         view.addSubview(it)
         return it
     }()
@@ -38,17 +39,32 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        // 默认在第二屏
-        setCurrentScrollVCWithOffsetX(kScreenW)
-        scrollView.contentOffset = CGPoint(x: kScreenW, y: 0)
+        setupNotifications()
         
         // TODO: 编辑状态和非编辑状态下，手势是否有两个；建议按住变为编辑模式，再重新按住挪动。然后点击空白区域取消编辑模式
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction(_:)))
         view.addGestureRecognizer(longPress)
         
+        let tapGes = UITapGestureRecognizer(target: self, action: #selector(tapAction))
+        view.addGestureRecognizer(tapGes)
+        
         HomeEditingManager.main.homeVC = self
     }
     
+}
+
+extension ViewController: UIScrollViewDelegate {
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        setCurrentScrollVCWithOffsetX(scrollView.contentOffset.x)
+    }
+    
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        setCurrentScrollVCWithOffsetX(scrollView.contentOffset.x)
+    }
+}
+
+// MARK: - Helper
+extension ViewController {
     private func setupUI() {
         view.addSubview(scrollView)
         scrollView.snp.makeConstraints {
@@ -69,6 +85,15 @@ class ViewController: UIViewController {
             $0.leading.trailing.bottom.equalToSuperview()
             $0.height.equalTo(120)
         }
+        
+        // 默认在第二屏
+        setCurrentScrollVCWithOffsetX(kScreenW)
+        scrollView.contentOffset = CGPoint(x: kScreenW, y: 0)
+    }
+    
+    private func setupNotifications() {
+        NotificationCenter.default.addObserver(self, selector: #selector(homeStartEditingMode), name: .homeStartEditingMode, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(homeEndEditingMode), name: .homeEndEditingMode, object: nil)
     }
     
     private func addMessageVC() {
@@ -87,15 +112,6 @@ class ViewController: UIViewController {
         scrollView.addSubview(vc.view)
     }
     
-    private func removeCollectionVC() {
-        guard let vc = subScrollVC.last as? CollectionDragSortViewController,
-              vc.items.isEmpty
-        else { return }
-        let view = vc.view
-        vc.removeFromParent()
-        view?.removeFromSuperview()        
-    }
-    
     @objc func longPressAction(_ longPress: UILongPressGestureRecognizer) {
         let pointInView = longPress.location(in: view)
         let editingManager = HomeEditingManager.main
@@ -103,11 +119,11 @@ class ViewController: UIViewController {
         
         switch longPress.state {
         case .began:
-            let index = subScrollVC.count - 1
-            addCollectionVC(dataSourceIndex: index, items: [])
+            editingManager.startEditingMode()
             editingManager.beginEditingAt(pointInView) { [weak self] position,item in
                 guard let self = self else { return }
-                self.outsideCell.isHidden = false 
+                self.outsideCell.isHidden = false
+                self.outsideCell.animateToBigger()
                 self.outsideCell.center = position
                 self.outsideCell.titleLabel.text = item.title
                 self.outsideCellCenterOffset = CGPoint(x: position.x - pointInView.x, y: position.y - pointInView.y)
@@ -118,18 +134,36 @@ class ViewController: UIViewController {
         case .ended,.cancelled:
             editingManager.endEditAt(pointInView)
             outsideCell.isHidden = true
-            
+            outsideCell.animateToNormal()
         default:
             return
         }
     }
     
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        setCurrentScrollVCWithOffsetX(scrollView.contentOffset.x)
+    // 单击关闭编辑模式
+    // FIXME: 系统表现为点击空白区域（即非cell的区域）关闭编辑模式，目前是点击所有区域都会关闭
+    @objc private func tapAction() {
+        if HomeEditingManager.main.isEditing {
+            HomeEditingManager.main.isEditing = false
+        }
     }
     
-    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        setCurrentScrollVCWithOffsetX(scrollView.contentOffset.x)
+    @objc private func homeStartEditingMode() {
+        let index = subScrollVC.count - 1
+        addCollectionVC(dataSourceIndex: index, items: [])
+    }
+    
+    @objc private func homeEndEditingMode() {
+        removeEmptyScrollVC()
+    }
+    
+    private func removeEmptyScrollVC() {
+        guard let vc = subScrollVC.last as? CollectionDragSortViewController,
+              vc.items.isEmpty
+        else { return }
+        let view = vc.view
+        view?.removeFromSuperview()
+        subScrollVC.removeLast()        
     }
     
     private func setCurrentScrollVCWithOffsetX(_ offsetX: CGFloat) {
@@ -150,12 +184,6 @@ class ViewController: UIViewController {
         }
         let offset = CGPoint(x: jumpX, y: 0)
         scrollView.setContentOffset(offset, animated: true)
-    }        
-    
-
-}
-
-extension ViewController: UIScrollViewDelegate {
-    
+    }
 }
 

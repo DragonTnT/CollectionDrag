@@ -7,20 +7,9 @@
 
 import UIKit
 
-protocol HomeEditingAble: UIViewController {
-    var items: [HomeItem] {get set}
-    var hasAddItemFromOtherVC: Bool {get set}
-    var dealingCell: DragSortCollectionCell? {get set}
-    
-    func homeEditingManagerBeginEditAt(point: CGPoint, positionCallBack: (_ positon: CGPoint, _ item: HomeItem, _ itemIndex: Int)->())
-    func homeEditingManagerUpdatePositionAt(point: CGPoint, outsideCellCenterOffset: CGPoint)
-    func homeEditingManagerAddItemFromOtherVC(item: HomeItem)
-    func homeEditingManagerRemoveItemFromOtherVC()
-    func homeEditingEndEdit()
-    func homeEditingRemoveItemAt(index: Int)
-}
+// TODO: items变化之后，同步到dataSourceManager，目前只是在关闭编辑模式时同步，但可能存在app被杀死等情况，这时就没有同步
 
-class BaseDragViewController: UIViewController,HomeEditingAble {
+class BaseDragViewController: UIViewController {
 
     var items: [HomeItem]
     var hasAddItemFromOtherVC: Bool = false
@@ -65,11 +54,11 @@ class BaseDragViewController: UIViewController,HomeEditingAble {
         setupNotifications()
         // Do any additional setup after loading the view.
     }
+    
+}
 
-    func setupUI() {
-        view.addSubview(collectionView)
-    }
-
+extension BaseDragViewController: HomeEditingAble {
+    
     func homeEditingManagerBeginEditAt(point: CGPoint, positionCallBack: (CGPoint, HomeItem, Int) -> ()) {
         let homeVC = HomeEditingManager.main.homeVC!
         let pointInCollectionView = homeVC.view.convert(point, to: collectionView)
@@ -79,7 +68,7 @@ class BaseDragViewController: UIViewController,HomeEditingAble {
             collectionView.beginInteractiveMovementForItem(at: indexPath)
             guard let position = dealingCell?.convert(CGPoint(x: ConstHelper.itemSize.width/2, y: ConstHelper.itemSize.height/2), to: view) else { return }
             let changedPosition = changePositonForCallBack(position: position)
-            positionCallBack(changedPosition,dealingCell!.item,indexPath.item)
+            positionCallBack(changedPosition,items[indexPath.item],indexPath.item)
         }
     }
 
@@ -112,11 +101,12 @@ class BaseDragViewController: UIViewController,HomeEditingAble {
     func homeEditingRemoveItemAt(index: Int) {
         collectionView.endInteractiveMovement()
         items.remove(at: index)
+        collectionView.reloadData()
     }
     
-    func homeEditingEndEdit() {
+    func homeEditingManagerGestureEndOrCanceled() {
         collectionView.endInteractiveMovement()
-        dealingCell?.show()
+        dealingCell?.show(isCloseHidden: !HomeEditingManager.main.isEditing)
     }
 }
 
@@ -127,33 +117,39 @@ extension BaseDragViewController: UICollectionViewDelegate, UICollectionViewData
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as! DragSortCollectionCell
-        cell.item = items[indexPath.item]
-        cell.show()
+        let isEditing = HomeEditingManager.main.isEditing
+        cell.refreshWithItem(items[indexPath.item], isEditing: HomeEditingManager.main.isEditing)
+        cell.show(isCloseHidden: !isEditing)
+        cell.closeCallBack = { thisCell in
+            guard let thisIndexPath = collectionView.indexPath(for: thisCell) else { return }
+            self.items.remove(at: thisIndexPath.item)
+            collectionView.reloadData()
+        }
         return cell
     }
 
     func collectionView(_ collectionView: UICollectionView, moveItemAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-
         let item = items.remove(at: sourceIndexPath.row)
         items.insert(item, at: destinationIndexPath.row)
-        print("将Item从第\(sourceIndexPath.row)移到\(destinationIndexPath.row)")
     }
 }
 
 // MARK: - Helper
 extension BaseDragViewController {
-    @objc func homeEditingDidStartEdit() {
-        for item in items {
-            item.isEditing = true
-        }
+    @objc func setupUI() {
+        view.addSubview(collectionView)
+    }
+    private func setupNotifications() {
+        NotificationCenter.default.addObserver(self, selector: #selector(homeStartEditingMode), name: .homeStartEditingMode, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(homeEndEditingMode), name: .homeEndEditingMode, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(homeSaveItemsToManager), name: .homeSaveItemsToManager, object: nil)
+    }
+    @objc func homeStartEditingMode() {
         collectionView.reloadData()
         // 保证`homeEditingManagerBeginEditAt`中能获取到dealingCell
         collectionView.layoutIfNeeded()
     }
-    @objc func homeEditingDidEndEdit() {
-        for item in items {
-            item.isEditing = false
-        }
+    @objc func homeEndEditingMode() {
         collectionView.reloadData()
     }
 
@@ -163,9 +159,4 @@ extension BaseDragViewController {
         return position
     }
     
-    private func setupNotifications() {
-        NotificationCenter.default.addObserver(self, selector: #selector(homeEditingDidStartEdit), name: .homeStartEditing, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(homeEditingDidEndEdit), name: .homeEndEditing, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(homeSaveItemsToManager), name: .homeSaveItemsToManager, object: nil)
-    }
 }

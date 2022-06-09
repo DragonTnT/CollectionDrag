@@ -63,6 +63,7 @@
 		067D7F9728364252008D13CA /* DragSortCollectionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 067D7F9428364252008D13CA /* DragSortCollectionCell.swift */; };
 		0699E49B283793A50069F152 /* HomeEditingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0699E49A283793A50069F152 /* HomeEditingManager.swift */; };
 		0699F69E284F3A8B005FA9A3 /* BaseDragViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0699F69D284F3A8B005FA9A3 /* BaseDragViewController.swift */; };
+		06ACCAFB2851D0D500608139 /* HomeEditingAble.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06ACCAFA2851D0D500608139 /* HomeEditingAble.swift */; };
 		40A550E9B2E1823C6292A700 /* Pods_NewDragDemoTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 42BAE94A9F0B35DFEF04A06E /* Pods_NewDragDemoTests.framework */; };
 		4B8D57BB63CB64CAF39494FE /* Pods_NewDragDemo_NewDragDemoUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2418B0B69C820D1E2735A7AE /* Pods_NewDragDemo_NewDragDemoUITests.framework */; };
 		F458DCFD365BFC4E1E9CE9A4 /* Pods_NewDragDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DF239CC69216DAAA938318C /* Pods_NewDragDemo.framework */; };
@@ -147,6 +148,7 @@
 		067D7F9428364252008D13CA /* DragSortCollectionCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DragSortCollectionCell.swift; sourceTree = "<group>"; };
 		0699E49A283793A50069F152 /* HomeEditingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeEditingManager.swift; sourceTree = "<group>"; };
 		0699F69D284F3A8B005FA9A3 /* BaseDragViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseDragViewController.swift; sourceTree = "<group>"; };
+		06ACCAFA2851D0D500608139 /* HomeEditingAble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeEditingAble.swift; sourceTree = "<group>"; };
 		06C5BD87250EF8E3F57A68B4 /* Pods-NewDragDemoTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NewDragDemoTests.debug.xcconfig"; path = "Target Support Files/Pods-NewDragDemoTests/Pods-NewDragDemoTests.debug.xcconfig"; sourceTree = "<group>"; };
 		0ACD866AAD75E62B54267BC0 /* Pods-NewDragDemoTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NewDragDemoTests.release.xcconfig"; path = "Target Support Files/Pods-NewDragDemoTests/Pods-NewDragDemoTests.release.xcconfig"; sourceTree = "<group>"; };
 		1E24B06195CA4EC35F4FF6AB /* Pods-NewDragDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NewDragDemo.release.xcconfig"; path = "Target Support Files/Pods-NewDragDemo/Pods-NewDragDemo.release.xcconfig"; sourceTree = "<group>"; };
@@ -227,6 +229,7 @@
 				067D7F3D28362CD9008D13CA /* SnapKit */,
 				067D7F1728362AC4008D13CA /* Info.plist */,
 				067D7F8D28362DB1008D13CA /* MessViewController.swift */,
+				06ACCAFA2851D0D500608139 /* HomeEditingAble.swift */,
 			);
 			path = NewDragDemo;
 			sourceTree = "<group>";
@@ -591,6 +594,7 @@
 				067D7F0E28362AC2008D13CA /* ViewController.swift in Sources */,
 				067D7F7C28362CD9008D13CA /* ConstraintLayoutGuideDSL.swift in Sources */,
 				067D7F8E28362DB1008D13CA /* MessViewController.swift in Sources */,
+				06ACCAFB2851D0D500608139 /* HomeEditingAble.swift in Sources */,
 				067D7F7428362CD9008D13CA /* ConstraintLayoutGuide.swift in Sources */,
 				067D7F7B28362CD9008D13CA /* ConstraintRelation.swift in Sources */,
 				0699F69E284F3A8B005FA9A3 /* BaseDragViewController.swift in Sources */,

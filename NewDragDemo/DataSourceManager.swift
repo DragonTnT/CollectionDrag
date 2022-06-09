@@ -76,7 +76,6 @@ class DataSourceManager {
         for section in scrollDataSource {
             var jsonArr: [[String: Any]] = []
             for item in section {
-                item.isEditing = false
                 if let json = item.toJSON() {
                     jsonArr.append(json)
                 }
@@ -91,7 +90,6 @@ class DataSourceManager {
     private func saveBottomToDisk() {
         var dataSource: [[String: Any]] = []
         for item in bottomDataSource {
-            item.isEditing = false
             if let json = item.toJSON() {
                 dataSource.append(json)
             }
@@ -149,7 +147,6 @@ class HomeItem: HandyJSON {
     required init() {}
     
     var title: String = ""
-    var isEditing = false
     
     init(title: String) {
         self.title = title

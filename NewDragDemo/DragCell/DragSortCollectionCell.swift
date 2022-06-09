@@ -10,22 +10,15 @@ import UIKit
 
 class DragSortCollectionCell: UICollectionViewCell,NibLoadable {
     
-    var item: HomeItem! {
-        didSet {
-            if item.isEditing {
-                startShake()
-            } else {
-                stopShake()
-            }
-            titleLabel.text = item.title
-        }
-    }
+    var closeCallBack: ((_ cell: DragSortCollectionCell)->())?
     
     @IBOutlet weak var bgView: UIView!
     @IBOutlet weak var iconImage: UIImageView!
     @IBOutlet weak var titleLabel: UILabel!
-    
-    
+    @IBOutlet weak var closeBtn: UIButton!
+    @IBAction func closeAction(_ sender: Any) {
+        closeCallBack?(self)
+    }
 
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -33,6 +26,16 @@ class DragSortCollectionCell: UICollectionViewCell,NibLoadable {
         bgView.layer.cornerRadius = adapter(15)
         bgView.layer.masksToBounds = true
 
+    }
+    
+    func refreshWithItem(_ item: HomeItem, isEditing: Bool) {
+        if isEditing {
+            startShake()
+        } else {
+            stopShake()
+        }
+        titleLabel.text = item.title
+        closeBtn.isHidden = !isEditing
     }
     
     func startShake() {
@@ -51,15 +54,35 @@ class DragSortCollectionCell: UICollectionViewCell,NibLoadable {
         contentView.layer.removeAnimation(forKey: "shake")
     }
     
-    func show() {
+    /// 展示
+    /// - Parameter isCloseHidden: 关闭按钮是否隐藏
+    func show(isCloseHidden: Bool) {
         bgView.isHidden = false
         iconImage.isHidden = false
         titleLabel.isHidden = false
+        closeBtn.isHidden = isCloseHidden
     }
     
+    /// 隐藏
     func hide() {
         bgView.isHidden = true
         iconImage.isHidden = true
         titleLabel.isHidden = true
+        closeBtn.isHidden = true
+    }
+    
+    func animateToBigger() {
+        let animation = CABasicAnimation(keyPath: "transform")
+        animation.isRemovedOnCompletion = false
+        animation.fillMode = .forwards
+        animation.duration = 0.2
+        animation.toValue = NSValue(caTransform3D: CATransform3DMakeScale(1.1, 1.1, 1.0))
+        contentView.layer.add(animation, forKey: "toBigger")
+    }
+    
+    func animateToNormal() {
+        contentView.layer.removeAnimation(forKey: "toBigger")
+        
+        // TODO: 缺少outsideCell移向正确位置的动画，目前是直接隐藏
     }
 }

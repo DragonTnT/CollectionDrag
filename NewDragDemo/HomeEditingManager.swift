@@ -19,7 +19,6 @@ class HomeEditingManager {
     static let main = HomeEditingManager()
     var homeVC: ViewController!
     var currentScrollVC: UIViewController!
-    
     var startEditVC: HomeEditingAble?
     var endEditVC: HomeEditingAble? {
         didSet {
@@ -47,26 +46,42 @@ class HomeEditingManager {
     var editingIndex: Int?
     var isInsertingItem = false
     
-    var isHomeEditing = false {
+    var isEditing = false {
         didSet {
-            if isHomeEditing {
-                NotificationCenter.default.post(name: .homeStartEditing, object: nil)
+            if isEditing {
+                NotificationCenter.default.post(name: .homeStartEditingMode, object: nil)
             } else {
-                NotificationCenter.default.post(name: .homeEndEditing, object: nil)
-                editingItem = nil
+                NotificationCenter.default.post(name: .homeEndEditingMode, object: nil)
             }
         }
     }
+    
+    func startEditingMode() {
+        if !isEditing {
+            isEditing = true
+        }
+    }
+    
+    func closeEditingMode() {
+        delay(0.2) {
+            if self.isEditing {
+                // fixme: 直接关闭修改状态，会导致cell没有归位的动画；并且由于collectionView执行reloadData，而不调用moveItemAt方法
+                self.isEditing = false
+                NotificationCenter.default.post(name: .homeSaveItemsToManager, object: nil)
+            }
+        }
+        
+    }
+    
     // TODO: 根据系统动画，直接加一屏
     func beginEditingAt(_ point: CGPoint, positionCallBack: (_ positon: CGPoint, _ item: HomeItem)->()) {
-        if !isHomeEditing {
-            isHomeEditing = true
-        }
+        
         if isPointInSrollView(point: point) {
             startEditVC = currentScrollVC as! CollectionDragSortViewController
         } else {
             startEditVC = homeVC.bottomSubVC
         }
+        endEditVC = startEditVC
         startEditVC?.homeEditingManagerBeginEditAt(point: point) { [weak self] positon, item, itemIndex in
             guard let self = self else { return }
             positionCallBack(positon,item)
@@ -94,23 +109,15 @@ class HomeEditingManager {
     }
     
     func endEditAt(_ point: CGPoint) {
-        delay(0.2) {
-            if self.isHomeEditing {
-                // fixme: 直接关闭修改状态，会导致cell没有归位的动画；并且由于collectionView执行reloadData，而不调用moveItemAt方法
-                self.isHomeEditing = false
-            }
-        }
 
         if let endVC = endEditVC {
-            endVC.homeEditingEndEdit()
+            endVC.homeEditingManagerGestureEndOrCanceled()
             
             if !endVC.isEqual(startEditVC) {
                 print("移除第\(editingIndex!)个item")
                             startEditVC?.homeEditingRemoveItemAt(index: editingIndex!)
             }
         }
-        
-        NotificationCenter.default.post(name: .homeSaveItemsToManager, object: nil)
         
         clearOptional()
     }
@@ -170,8 +177,8 @@ class HomeEditingManager {
 
 
 extension Notification.Name {
-    static let homeStartEditing = Notification.Name("homeStartEditing")
-    static let homeEndEditing = Notification.Name("homeEndEditing")
+    static let homeStartEditingMode = Notification.Name("homeStartEditingMode")
+    static let homeEndEditingMode = Notification.Name("homeEndEditingMode")
     static let homeSaveItemsToManager = Notification.Name("homeSaveItemsToManager")
     static let homeDataSourceUpdated = Notification.Name("homeDataSourceUpdated")
 }

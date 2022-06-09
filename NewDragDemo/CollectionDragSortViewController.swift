@@ -33,6 +33,7 @@ class CollectionDragSortViewController: BaseDragViewController {
     }
     
     override func homeSaveItemsToManager() {
+        // FIXME:  scrollVC增减时，scrollDataSourceIndex没有更新
         DataSourceManager.main.updateScrollItems(items, at: scrollDataSourceIndex)
     }
     
