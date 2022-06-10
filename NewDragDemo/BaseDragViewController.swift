@@ -14,6 +14,7 @@ class BaseDragViewController: UIViewController {
     var items: [HomeItem]
     var hasAddItemFromOtherVC: Bool = false
     var dealingCell: DragSortCollectionCell?
+    var dragBeginOriginY: CGFloat?
 
     lazy var layout: UICollectionViewFlowLayout = {
         let layout = UICollectionViewFlowLayout()
@@ -64,6 +65,7 @@ extension BaseDragViewController: HomeEditingAble {
         let pointInCollectionView = homeVC.view.convert(point, to: collectionView)
         if let indexPath = collectionView.indexPathForItem(at: pointInCollectionView) {
             dealingCell = collectionView.cellForItem(at: indexPath) as? DragSortCollectionCell
+            dragBeginOriginY = dealingCell?.frame.origin.y
             dealingCell?.hide()
             collectionView.beginInteractiveMovementForItem(at: indexPath)
             guard let position = dealingCell?.convert(CGPoint(x: ConstHelper.itemSize.width/2, y: ConstHelper.itemSize.height/2), to: view) else { return }
@@ -137,6 +139,28 @@ extension BaseDragViewController: UICollectionViewDelegate, UICollectionViewData
         let item = items.remove(at: sourceIndexPath.row)
         items.insert(item, at: destinationIndexPath.row)
     }
+    
+    func collectionView(_ collectionView: UICollectionView, targetIndexPathForMoveOfItemFromOriginalIndexPath originalIndexPath: IndexPath, atCurrentIndexPath currentIndexPath: IndexPath, toProposedIndexPath proposedIndexPath: IndexPath) -> IndexPath {
+//        print("original \(originalIndexPath.item)")
+//        print("current \(currentIndexPath.item)")
+//        print("proposed \(proposedIndexPath.item)")
+//        print("---------------")
+
+        if originalIndexPath == proposedIndexPath {
+            guard let dealingCellOriginY = dealingCell?.frame.origin.y,
+                  let originCellOriginY = dragBeginOriginY
+            else { return proposedIndexPath }
+            if dealingCellOriginY - originCellOriginY > adapter(100) {
+                return IndexPath(item: items.count - 1, section: 0)
+            } else {
+                return proposedIndexPath
+            }
+        } else {
+            return proposedIndexPath
+        }
+
+    }
+
 }
 
 // MARK: - Helper
