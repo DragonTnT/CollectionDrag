@@ -52,7 +52,7 @@ class BaseDragViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupNotifications()
-        // Do any additional setup after loading the view.
+        // Do any additional setup after loading the view.        
     }
     
 }
@@ -99,9 +99,14 @@ extension BaseDragViewController: HomeEditingAble {
     }
 
     func homeEditingRemoveItemAt(index: Int) {
-        collectionView.endInteractiveMovement()
-        items.remove(at: index)
-        collectionView.reloadData()
+        
+        collectionView.performBatchUpdates {
+            collectionView.endInteractiveMovement()
+            items.remove(at: index)
+            collectionView.deleteItems(at: [IndexPath(item: index, section: 0)])
+        } completion: { _ in
+//            self.collectionView.reloadData()
+        }
     }
     
     func homeEditingManagerGestureEndOrCanceled() {

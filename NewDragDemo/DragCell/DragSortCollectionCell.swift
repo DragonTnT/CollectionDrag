@@ -10,6 +10,8 @@ import UIKit
 
 class DragSortCollectionCell: UICollectionViewCell,NibLoadable {
     
+    static let shakeAniKey = "shake"
+    
     var closeCallBack: ((_ cell: DragSortCollectionCell)->())?
     
     @IBOutlet weak var bgView: UIView!
@@ -39,6 +41,7 @@ class DragSortCollectionCell: UICollectionViewCell,NibLoadable {
     }
     
     func startShake() {
+        if let _ = contentView.layer.animation(forKey: DragSortCollectionCell.shakeAniKey) { return }
         
         let shakeAnimation = CAKeyframeAnimation(keyPath: "transform.rotation")
         shakeAnimation.values = [-5 / 180 * Double.pi, 5 / 180 * Double.pi, -5 / 180 * Double.pi]
@@ -46,12 +49,12 @@ class DragSortCollectionCell: UICollectionViewCell,NibLoadable {
         shakeAnimation.fillMode = .forwards
         shakeAnimation.duration = 0.3
         shakeAnimation.repeatCount = MAXFLOAT
-        contentView.layer.add(shakeAnimation, forKey: "shake")
+        contentView.layer.add(shakeAnimation, forKey: DragSortCollectionCell.shakeAniKey)
         
     }
 
     func stopShake() {
-        contentView.layer.removeAnimation(forKey: "shake")
+        contentView.layer.removeAnimation(forKey: DragSortCollectionCell.shakeAniKey)
     }
     
     /// 展示
