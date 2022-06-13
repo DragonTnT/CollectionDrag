@@ -15,6 +15,7 @@ class BaseDragViewController: UIViewController {
     var hasAddItemFromOtherVC: Bool = false
     var dealingCell: DragSortCollectionCell?
     var dragBeginOriginY: CGFloat?
+    var dealingCellCurrentIndex: Int?
 
     lazy var layout: UICollectionViewFlowLayout = {
         let layout = UICollectionViewFlowLayout()
@@ -100,8 +101,8 @@ extension BaseDragViewController: HomeEditingAble {
         collectionView.deleteItems(at: [indexPath])
     }
 
-    func homeEditingRemoveItemAt(index: Int) {
-        
+    func homeEditingRemoveStartItem() {
+        guard let index = dealingCellCurrentIndex else { return }
         collectionView.performBatchUpdates {
             collectionView.endInteractiveMovement()
             items.remove(at: index)
@@ -141,24 +142,18 @@ extension BaseDragViewController: UICollectionViewDelegate, UICollectionViewData
     }
     
     func collectionView(_ collectionView: UICollectionView, targetIndexPathForMoveOfItemFromOriginalIndexPath originalIndexPath: IndexPath, atCurrentIndexPath currentIndexPath: IndexPath, toProposedIndexPath proposedIndexPath: IndexPath) -> IndexPath {
-//        print("original \(originalIndexPath.item)")
-//        print("current \(currentIndexPath.item)")
-//        print("proposed \(proposedIndexPath.item)")
-//        print("---------------")
-
+        // TODO: 目前这里只能处理scrollVC的cell往空白处移动，collectionView重新布局。
+        var resultIndexPath: IndexPath = proposedIndexPath
         if originalIndexPath == proposedIndexPath {
-            guard let dealingCellOriginY = dealingCell?.frame.origin.y,
-                  let originCellOriginY = dragBeginOriginY
-            else { return proposedIndexPath }
-            if dealingCellOriginY - originCellOriginY > adapter(100) {
-                return IndexPath(item: items.count - 1, section: 0)
-            } else {
-                return proposedIndexPath
+            if let dealingCellOriginY = dealingCell?.frame.origin.y,
+               let originCellOriginY = dragBeginOriginY {
+                    if dealingCellOriginY - originCellOriginY > adapter(100) {
+                        resultIndexPath = IndexPath(item: items.count - 1, section: 0)
+                    }
             }
-        } else {
-            return proposedIndexPath
         }
-
+        dealingCellCurrentIndex = resultIndexPath.item
+        return resultIndexPath
     }
 
 }

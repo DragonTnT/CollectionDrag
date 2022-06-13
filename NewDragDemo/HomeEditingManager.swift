@@ -43,7 +43,6 @@ class HomeEditingManager {
     var scrollDirection: ScrollDirection?
     
     var editingItem: HomeItem?
-    var editingIndex: Int?
     var isInsertingItem = false
     
     var isEditing = false {
@@ -86,7 +85,6 @@ class HomeEditingManager {
             guard let self = self else { return }
             positionCallBack(positon,item)
             self.editingItem = item
-            self.editingIndex = itemIndex
         }
     }
     // TODO: 顶部数量的限制，当挪向下一屏，下一屏已满时，下一屏的最后一个，自动跳动下下屏
@@ -114,8 +112,7 @@ class HomeEditingManager {
             endVC.homeEditingManagerGestureEndOrCanceled()
             
             if !endVC.isEqual(startEditVC) {
-                print("移除第\(editingIndex!)个item")
-                            startEditVC?.homeEditingRemoveItemAt(index: editingIndex!)
+                startEditVC?.homeEditingRemoveStartItem()
             }
         }
         
@@ -149,7 +146,6 @@ class HomeEditingManager {
             endEditVC = nil
         }
         editingItem = nil
-        editingIndex = nil
         invalidScrollTimer()
     }
     

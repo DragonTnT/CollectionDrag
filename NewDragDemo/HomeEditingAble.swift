@@ -18,6 +18,6 @@ protocol HomeEditingAble: UIViewController {
     func homeEditingManagerAddItemFromOtherVC(item: HomeItem)
     func homeEditingManagerRemoveItemFromOtherVC()
     func homeEditingManagerGestureEndOrCanceled()
-    func homeEditingRemoveItemAt(index: Int)
+    func homeEditingRemoveStartItem()
 //    func homeEditingClose
 }
