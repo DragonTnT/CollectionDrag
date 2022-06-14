@@ -58,7 +58,6 @@
 		067D7F8C28362CE3008D13CA /* MainLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 067D7F8928362CE3008D13CA /* MainLayout.swift */; };
 		067D7F8E28362DB1008D13CA /* MessViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 067D7F8D28362DB1008D13CA /* MessViewController.swift */; };
 		067D7F90283641AB008D13CA /* BottomVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 067D7F8F283641AB008D13CA /* BottomVC.swift */; };
-		067D7F9528364252008D13CA /* MovingCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 067D7F9228364252008D13CA /* MovingCell.swift */; };
 		067D7F9628364252008D13CA /* DragSortCollectionCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 067D7F9328364252008D13CA /* DragSortCollectionCell.xib */; };
 		067D7F9728364252008D13CA /* DragSortCollectionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 067D7F9428364252008D13CA /* DragSortCollectionCell.swift */; };
 		0699E49B283793A50069F152 /* HomeEditingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0699E49A283793A50069F152 /* HomeEditingManager.swift */; };
@@ -143,7 +142,6 @@
 		067D7F8928362CE3008D13CA /* MainLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainLayout.swift; sourceTree = "<group>"; };
 		067D7F8D28362DB1008D13CA /* MessViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessViewController.swift; sourceTree = "<group>"; };
 		067D7F8F283641AB008D13CA /* BottomVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomVC.swift; sourceTree = "<group>"; };
-		067D7F9228364252008D13CA /* MovingCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MovingCell.swift; sourceTree = "<group>"; };
 		067D7F9328364252008D13CA /* DragSortCollectionCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = DragSortCollectionCell.xib; sourceTree = "<group>"; };
 		067D7F9428364252008D13CA /* DragSortCollectionCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DragSortCollectionCell.swift; sourceTree = "<group>"; };
 		0699E49A283793A50069F152 /* HomeEditingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeEditingManager.swift; sourceTree = "<group>"; };
@@ -305,7 +303,6 @@
 		067D7F9128364252008D13CA /* DragCell */ = {
 			isa = PBXGroup;
 			children = (
-				067D7F9228364252008D13CA /* MovingCell.swift */,
 				067D7F9328364252008D13CA /* DragSortCollectionCell.xib */,
 				067D7F9428364252008D13CA /* DragSortCollectionCell.swift */,
 			);
@@ -620,7 +617,6 @@
 				067D7F7028362CD9008D13CA /* ConstraintInsetTarget.swift in Sources */,
 				067D7F7328362CD9008D13CA /* ConstraintView.swift in Sources */,
 				067D7F6528362CD9008D13CA /* LayoutConstraintItem.swift in Sources */,
-				067D7F9528364252008D13CA /* MovingCell.swift in Sources */,
 				067D7F7228362CD9008D13CA /* UILayoutSupport+Extensions.swift in Sources */,
 				067D7F6D28362CD9008D13CA /* ConstraintDSL.swift in Sources */,
 				067D7F7528362CD9008D13CA /* ConstraintLayoutSupport.swift in Sources */,

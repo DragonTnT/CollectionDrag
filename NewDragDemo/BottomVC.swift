@@ -14,8 +14,8 @@ class BottomVC: BaseDragViewController {
         collectionView.snp.makeConstraints { $0.edges.equalToSuperview() }
     }
     
-    override func homeSaveItemsToManager() {
-        DataSourceManager.main.bottomDataSource = items
+    override func saveItemsToManager() {
+//        DataSourceManager.main.bottomDataSource = items
     }
     override func changePositonForCallBack(position: CGPoint) -> CGPoint {
         return CGPoint(x: position.x, y: position.y + kScreenH - adapter(120))

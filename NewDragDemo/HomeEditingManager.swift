@@ -62,17 +62,11 @@ class HomeEditingManager {
     }
     
     func closeEditingMode() {
-        delay(0.2) {
-            if self.isEditing {
-                // fixme: 直接关闭修改状态，会导致cell没有归位的动画；并且由于collectionView执行reloadData，而不调用moveItemAt方法
-                self.isEditing = false
-                NotificationCenter.default.post(name: .homeSaveItemsToManager, object: nil)
-            }
+        if self.isEditing {
+            self.isEditing = false
         }
-        
     }
     
-    // TODO: 根据系统动画，直接加一屏
     func beginEditingAt(_ point: CGPoint, positionCallBack: (_ positon: CGPoint, _ item: HomeItem)->()) {
         
         if isPointInSrollView(point: point) {
@@ -119,6 +113,8 @@ class HomeEditingManager {
         clearOptional()
     }
     
+    // 注意：在等于kscreenH - adapter(120)的情况，属于BottomVC
+    // TODO: 120的值待修改，考虑刘海屏和非刘海屏
     private func isPointInSrollView(point: CGPoint) -> Bool {
         return point.y < kScreenH - adapter(120)
     }
@@ -175,6 +171,5 @@ class HomeEditingManager {
 extension Notification.Name {
     static let homeStartEditingMode = Notification.Name("homeStartEditingMode")
     static let homeEndEditingMode = Notification.Name("homeEndEditingMode")
-    static let homeSaveItemsToManager = Notification.Name("homeSaveItemsToManager")
     static let homeDataSourceUpdated = Notification.Name("homeDataSourceUpdated")
 }

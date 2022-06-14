@@ -12,9 +12,19 @@ class ViewController: UIViewController {
     var subScrollVC: [UIViewController] = [] {
         didSet {
             scrollView.contentSize = CGSize(width: kScreenW * CGFloat(subScrollVC.count), height: kScreenH)
+            pageControll.numberOfPages = subScrollVC.count
         }
     }
+    let messageVC = MessViewController()
+    
     lazy var bottomSubVC = BottomVC(items: DataSourceManager.main.bottomDataSource)
+    
+    lazy var pageControll: UIPageControl = {
+        let it = UIPageControl()
+        it.pageIndicatorTintColor = .gray
+        it.currentPageIndicatorTintColor = .black
+        return it
+    }()
     
     lazy var scrollView: UIScrollView = {
         let it = UIScrollView(frame: self.view.bounds)
@@ -41,7 +51,6 @@ class ViewController: UIViewController {
         setupUI()
         setupNotifications()
         
-        // TODO: 编辑状态和非编辑状态下，手势是否有两个；建议按住变为编辑模式，再重新按住挪动。然后点击空白区域取消编辑模式
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPressAction(_:)))
         view.addGestureRecognizer(longPress)
         
@@ -66,16 +75,25 @@ extension ViewController: UIScrollViewDelegate {
 // MARK: - Helper
 extension ViewController {
     private func setupUI() {
+        let imgV = UIImageView(image: UIImage(named: "background")!)
+        view.addSubview(imgV)
         view.addSubview(scrollView)
+        view.addSubview(pageControll)
+        imgV.snp.makeConstraints { $0.edges.equalToSuperview() }
         scrollView.snp.makeConstraints {
             $0.edges.equalToSuperview()
+        }
+        pageControll.snp.makeConstraints {
+            $0.height.equalTo(30)
+            $0.centerX.equalToSuperview()
+            $0.bottom.equalTo(-140)
         }
         
         addMessageVC()
         
         // 添加滑动控制器
         for (index,pageSource) in DataSourceManager.main.scrollDataSource.enumerated() {
-            addCollectionVC(dataSourceIndex: index, items: pageSource)
+            addCollectionVC(dataSourceIndex: index, items: pageSource, isFromStartEditingMode: false)
         }
         
         //添加底部控制器
@@ -85,10 +103,12 @@ extension ViewController {
             $0.leading.trailing.bottom.equalToSuperview()
             $0.height.equalTo(120)
         }
-        
+
         // 默认在第二屏
         setCurrentScrollVCWithOffsetX(kScreenW)
         scrollView.contentOffset = CGPoint(x: kScreenW, y: 0)
+        pageControll.currentPage = 1
+        pageControll.addTarget(self, action: #selector(pageControllValueChanged(controll:)), for: .valueChanged)
     }
     
     private func setupNotifications() {
@@ -97,19 +117,30 @@ extension ViewController {
     }
     
     private func addMessageVC() {
-        let vc = MessViewController()
-        subScrollVC.append(vc)
-        scrollView.addSubview(vc.view)
-        vc.view.frame = view.bounds
+        subScrollVC.append(messageVC)
+        scrollView.addSubview(messageVC.view)
+        messageVC.view.frame = view.bounds
     }
     
-    private func addCollectionVC(dataSourceIndex: Int, items: [HomeItem]) {
+    /// 添加控制器
+    /// - Parameters:
+    ///   - dataSourceIndex: Items数据源对应的index
+    ///   - items: items数据源
+    ///   - isFromStartEditingMode: 方法是否来源于开启编辑模式
+    private func addCollectionVC(dataSourceIndex: Int, items: [HomeItem], isFromStartEditingMode: Bool) {
         let vc = CollectionDragSortViewController(dataSourceIndex: dataSourceIndex, items: items)
         subScrollVC.append(vc)
-        
-        let origin = CGPoint(x: CGFloat(dataSourceIndex + 1) * view.bounds.width, y: 0)
-        vc.view.frame = CGRect(origin: origin, size: view.bounds.size)
+        setScrollVCViewFrameWith(index: dataSourceIndex+1, scrollVC: vc)
         scrollView.addSubview(vc.view)
+        
+        if isFromStartEditingMode {
+            DataSourceManager.main.addScrollPage(items: [])
+        }
+    }
+    
+    private func setScrollVCViewFrameWith(index: Int, scrollVC: CollectionDragSortViewController) {
+        let origin = CGPoint(x: CGFloat(index) * view.bounds.width, y: 0)
+        scrollVC.view.frame = CGRect(origin: origin, size: view.bounds.size)
     }
     
     @objc func longPressAction(_ longPress: UILongPressGestureRecognizer) {
@@ -141,7 +172,7 @@ extension ViewController {
     }
     
     // 单击关闭编辑模式
-    // FIXME: 系统表现为点击空白区域（即非cell的区域）关闭编辑模式，目前是点击所有区域都会关闭
+    // TODO: 系统表现为点击空白区域（即非cell的区域）关闭编辑模式，目前是点击所有区域都会关闭
     @objc private func tapAction() {
         if HomeEditingManager.main.isEditing {
             HomeEditingManager.main.isEditing = false
@@ -150,25 +181,66 @@ extension ViewController {
     
     @objc private func homeStartEditingMode() {
         let index = subScrollVC.count - 1
-        addCollectionVC(dataSourceIndex: index, items: [])
+        addCollectionVC(dataSourceIndex: index, items: [], isFromStartEditingMode: true)
     }
     
+    // 结束编辑模式并保存数据到`DataSourceManager`
     @objc private func homeEndEditingMode() {
-        removeEmptyScrollVC()
+
+        var needToShowScrollVC: CollectionDragSortViewController?
+        var newSubScrollVCs: [UIViewController] = [messageVC]
+        
+        // for循环中的处理：1.删除items为空的控制器 2.获取到结束编辑模式后，显示在当前屏幕的控制器
+        for (index,vc) in subScrollVC.enumerated() {
+            guard let scrollVC = vc as? CollectionDragSortViewController else { continue }
+            if scrollVC.items.isEmpty {
+                // 删除items为空的控制器
+                let view = scrollVC.view
+                view?.removeFromSuperview()
+            } else {
+                newSubScrollVCs.append(vc)
+            }
+            if scrollVC == HomeEditingManager.main.currentScrollVC {
+                if scrollVC.items.isEmpty {
+                    // 若当前显示控制器items为空，则显示前一个控制器
+                    if index > 1 {
+                        needToShowScrollVC = subScrollVC[index - 1] as? CollectionDragSortViewController
+                    }
+                } else {
+                    needToShowScrollVC = scrollVC
+                }
+            }
+        }
+
+        subScrollVC = newSubScrollVCs
+        
+        // 保存数据到`DataSourceManager`
+        DataSourceManager.main.removeAllScrollDataSource()
+        for (index,vc) in subScrollVC.enumerated() {
+            guard let scrollVC = vc as? CollectionDragSortViewController else { continue }
+            scrollVC.scrollDataSourceIndex = index - 1
+            setScrollVCViewFrameWith(index: index, scrollVC: scrollVC)
+            if needToShowScrollVC == vc {
+                let offsetX = kScreenW * CGFloat(index)
+                setCurrentScrollVCWithOffsetX(offsetX)
+                scrollView.contentOffset = CGPoint(x: offsetX, y: 0)
+            }
+            DataSourceManager.main.addScrollPage(items: scrollVC.items)
+        }
+        DataSourceManager.main.bottomDataSource = bottomSubVC.items
     }
     
-    private func removeEmptyScrollVC() {
-        guard let vc = subScrollVC.last as? CollectionDragSortViewController,
-              vc.items.isEmpty
-        else { return }
-        let view = vc.view
-        view?.removeFromSuperview()
-        subScrollVC.removeLast()        
+    @objc private func pageControllValueChanged(controll: UIPageControl) {
+        let page = controll.currentPage
+        let offsetX = kScreenW * CGFloat(page)
+        scrollView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: true)
     }
     
     private func setCurrentScrollVCWithOffsetX(_ offsetX: CGFloat) {
-        let scrollVC = subScrollVC[Int(offsetX/kScreenW)]
+        let index = Int(offsetX/kScreenW)
+        let scrollVC = subScrollVC[index]
         HomeEditingManager.main.currentScrollVC = scrollVC
+        pageControll.currentPage = index
     }
     
     

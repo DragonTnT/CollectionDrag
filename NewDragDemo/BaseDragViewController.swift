@@ -7,8 +7,6 @@
 
 import UIKit
 
-// TODO: items变化之后，同步到dataSourceManager，目前只是在关闭编辑模式时同步，但可能存在app被杀死等情况，这时就没有同步
-
 class BaseDragViewController: UIViewController {
 
     var items: [HomeItem]
@@ -87,6 +85,7 @@ extension BaseDragViewController: HomeEditingAble {
         let indexPath = IndexPath(item: itemIndex, section: 0)
         items.append(item)
         collectionView.insertItems(at: [indexPath])
+        saveItemsToManager()
 
         dealingCell = collectionView.cellForItem(at: indexPath) as? DragSortCollectionCell
         dealingCell?.hide()
@@ -99,6 +98,7 @@ extension BaseDragViewController: HomeEditingAble {
         let indexPath = IndexPath(item: itemIndex, section: 0)
         items.removeLast()
         collectionView.deleteItems(at: [indexPath])
+        saveItemsToManager()
     }
 
     func homeEditingRemoveStartItem() {
@@ -107,6 +107,7 @@ extension BaseDragViewController: HomeEditingAble {
             collectionView.endInteractiveMovement()
             items.remove(at: index)
             collectionView.deleteItems(at: [IndexPath(item: index, section: 0)])
+            saveItemsToManager()
         } completion: { _ in
 //            self.collectionView.reloadData()
         }
@@ -131,26 +132,41 @@ extension BaseDragViewController: UICollectionViewDelegate, UICollectionViewData
         cell.closeCallBack = { thisCell in
             guard let thisIndexPath = collectionView.indexPath(for: thisCell) else { return }
             self.items.remove(at: thisIndexPath.item)
-            collectionView.reloadData()
+            collectionView.deleteItems(at: [thisIndexPath])
+            self.saveItemsToManager()
         }
         return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        print("xixi")
     }
 
     func collectionView(_ collectionView: UICollectionView, moveItemAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
         let item = items.remove(at: sourceIndexPath.row)
         items.insert(item, at: destinationIndexPath.row)
+        saveItemsToManager()
     }
     
     func collectionView(_ collectionView: UICollectionView, targetIndexPathForMoveOfItemFromOriginalIndexPath originalIndexPath: IndexPath, atCurrentIndexPath currentIndexPath: IndexPath, toProposedIndexPath proposedIndexPath: IndexPath) -> IndexPath {
-        // TODO: 目前这里只能处理scrollVC的cell往空白处移动，collectionView重新布局。
+        
+        // TODO: 目前这里只能处理scrollVC的cell往空白处移动，bottomVC的cell移动到scrollVC，collectionView重新布局。
+        // 但没有解决的是cell先和本vc的cell互换位置后，再执行上面的操作；因为和本vc互换位置后，originalIndexPath == proposedIndexPath不相等，就不会执行以下逻辑。
         var resultIndexPath: IndexPath = proposedIndexPath
-        if originalIndexPath == proposedIndexPath {
-            if let dealingCellOriginY = dealingCell?.frame.origin.y,
-               let originCellOriginY = dragBeginOriginY {
-                    if dealingCellOriginY - originCellOriginY > adapter(100) {
-                        resultIndexPath = IndexPath(item: items.count - 1, section: 0)
-                    }
+        if originalIndexPath == proposedIndexPath, let dealingCell = dealingCell  {
+            if self.isKind(of: CollectionDragSortViewController.self) {
+                   if let originCellOriginY = dragBeginOriginY {
+                       if dealingCell.frame.origin.y - originCellOriginY > adapter(100) {
+                            resultIndexPath = IndexPath(item: items.count - 1, section: 0)
+                        }
+                }
+            } else if self.isKind(of: BottomVC.self) {
+                let pointInScreen = view.convert(dealingCell.center, to: HomeEditingManager.main.homeVC.view)
+                if pointInScreen.y >= kScreenH - adapter(120) && pointInScreen.y < kScreenH - adapter(70) {
+                    resultIndexPath = IndexPath(item: items.count - 1, section: 0)
+                }
             }
+            
         }
         dealingCellCurrentIndex = resultIndexPath.item
         return resultIndexPath
@@ -166,7 +182,6 @@ extension BaseDragViewController {
     private func setupNotifications() {
         NotificationCenter.default.addObserver(self, selector: #selector(homeStartEditingMode), name: .homeStartEditingMode, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(homeEndEditingMode), name: .homeEndEditingMode, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(homeSaveItemsToManager), name: .homeSaveItemsToManager, object: nil)
     }
     @objc func homeStartEditingMode() {
         collectionView.reloadData()
@@ -177,7 +192,7 @@ extension BaseDragViewController {
         collectionView.reloadData()
     }
 
-    @objc func homeSaveItemsToManager() {}
+    @objc func saveItemsToManager() {}
 
     @objc func changePositonForCallBack(position: CGPoint) -> CGPoint {
         return position

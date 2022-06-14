@@ -12,6 +12,9 @@ import HandyJSON
 class DataSourceManager {
     private init() {
         NotificationCenter.default.addObserver(self, selector: #selector(saveInDisk), name: UIApplication.willTerminateNotification, object: nil)
+        // 当先进入后台，再关闭app时，`willTerminateNotification`不会调用，因此也需要监听`didEnterBackgroundNotification`
+        NotificationCenter.default.addObserver(self, selector: #selector(saveInDisk), name: UIApplication.didEnterBackgroundNotification, object: nil)
+        // TODO: 退出登录时，应该清除掉本地的缓存，每次登录重新获取
     }
     static let main = DataSourceManager()
     let mainKey = "home_main_items"
@@ -27,6 +30,10 @@ class DataSourceManager {
     }
     
     @objc func saveInDisk() {
+        if HomeEditingManager.main.isEditing {
+            HomeEditingManager.main.isEditing = false
+        }
+        
         saveMainToDisk()
         saveBottomToDisk()
     }
@@ -70,8 +77,6 @@ class DataSourceManager {
     }
     
     private func saveMainToDisk() {
-        // FIXME: 便于调试，暂时关闭保存
-        return
         var dataSource: [[[String: Any]]] = []
         for section in scrollDataSource {
             var jsonArr: [[String: Any]] = []
@@ -99,18 +104,14 @@ class DataSourceManager {
         }
     }
     
-    func updateScrollItems(_ items: [HomeItem], at index: Int) {
-        let dataSourceCount = scrollDataSource.count
-        if dataSourceCount == index {
-            DataSourceManager.main.scrollDataSource.append(items)
-        } else if dataSourceCount > index {
-            scrollDataSource[index] = items
-        } else {
-            fatalError()
-        }
+    func removeAllScrollDataSource() {
+        scrollDataSource.removeAll()
     }
     
-    // TODO: 关闭编辑模式时调用，需要清除掉scrollDataSource中item数量为空的页面
+    func addScrollPage(items: [HomeItem]) {
+        scrollDataSource.append(items)
+    }
+    
     func homeEndEdit() {
         NotificationCenter.default.post(name: .homeDataSourceUpdated, object: nil)
     }
@@ -152,17 +153,5 @@ class HomeItem: HandyJSON {
         self.title = title
     }
 }
-
-//enum HomeItemLocationType {
-//    case scrollView
-//    case bottom
-//}
-//
-//struct HomeItemLocation {
-//    var scrollVCIndex: Int = 0
-//    var type: HomeItemLocationType = .scrollView
-//    var indexPath: IndexPath = IndexPath(item: 0, section: 0)
-//
-//}
 
 
